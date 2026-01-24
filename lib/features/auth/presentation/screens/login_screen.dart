@@ -3,7 +3,7 @@ import 'package:elapro/core/theme/app_colors.dart';
 import 'package:elapro/common/widgets/custom_button.dart';
 import 'package:elapro/features/auth/presentation/widgets/auth_text_field.dart';
 import 'register_screen.dart';
-import 'package:elapro/features/onboarding/presentation/screens/profile_selection_screen.dart';
+import 'package:elapro/features/onboarding/presentation/screens/onboarding_wrapper_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Simulating login success
     Navigator.pushReplacement(
       context, 
-      MaterialPageRoute(builder: (_) => const ProfileSelectionScreen())
+      MaterialPageRoute(builder: (_) => const OnboardingFlowScreen())
     );
   }
 
@@ -34,42 +34,43 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // Ensure no back button
-        title: const Text('ElaPro'),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
-              // Adicionando o Ícone/Logo "Gestão Feminina"
+              const SizedBox(height: 40),
+              // Logo do App
               Center(
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome, // Placeholder para os brilhos
-                    color: AppColors.primary,
-                    size: 40,
-                  ),
+                child: Image.asset(
+                  'assets/images/app_logo.png',
+                  height: 30,
+                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 12),
-              const Center(
-                child: Text(
-                  'GESTÃO FEMININA',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
+              const SizedBox(height: 50),
+              // Ícone do App
+              Center(
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryPink.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30), // Arredondamento suave como no ícone
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -78,8 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Bem-vinda de volta',
                 style: TextStyle(
                   fontSize: 28,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700, // Slightly less heavy than bold
                   color: AppColors.textPrimary,
+                  letterSpacing: -1.0, // Tighter titles look more premium
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -89,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.textSecondary,
+                  letterSpacing: -0.2, // Subtle tightening for refinement
                 ),
                 textAlign: TextAlign.center,
               ),

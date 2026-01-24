@@ -103,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Colors.grey,
+          color: AppColors.primaryPurple,
           letterSpacing: 1.2,
         ),
       ),
@@ -138,7 +138,7 @@ class SettingsScreen extends StatelessWidget {
             color: AppColors.background,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: titleColor == Colors.red ? Colors.red : AppColors.primary),
+          child: Icon(icon, color: titleColor == Colors.red ? Colors.red : AppColors.primaryPink),
         ),
         title: Text(
           title,

@@ -35,7 +35,7 @@ class _AgendadorDashboardState extends State<AgendadorDashboard> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: const Color(0xFF4A148C), 
+        selectedItemColor: AppColors.primaryPink, 
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
@@ -47,6 +47,25 @@ class _AgendadorDashboardState extends State<AgendadorDashboard> {
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
         ],
       ),
+      floatingActionButton: _currentIndex == 0 ? Container(
+        decoration: BoxDecoration(
+          gradient: AppColors.brandGradient,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryPink.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () {},
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.white, size: 30),
+        ),
+      ) : null,
     );
   }
 }
@@ -115,15 +134,21 @@ class _AgendadorHomeState extends State<_AgendadorHome> {
                 children: [
                   Row(
                     children: [
-                      const CircleAvatar(
-                        backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=a042581f4e29026024d'),
-                        radius: 24,
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.brandGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const CircleAvatar(
+                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=Juliana'),
+                          radius: 22,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
-                          Text("Bom dia,", style: TextStyle(color: Color(0xFF9E1E63), fontSize: 13)),
                           Text("Juliana Costa", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
                         ],
                       ),
@@ -139,7 +164,7 @@ class _AgendadorHomeState extends State<_AgendadorHome> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Outubro 2024", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const Text("Hoje", style: TextStyle(color: Color(0xFF4A148C), fontWeight: FontWeight.bold)),
+                  const Text("Hoje", style: TextStyle(color: AppColors.primaryPurple, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -161,10 +186,10 @@ class _AgendadorHomeState extends State<_AgendadorHome> {
 
               // Stats Row (Static for demo)
               Row(
-                children: const [
-                    Expanded(child: _StatCard(icon: Icons.attach_money, title: "GANHOS", value: "R\$ 840,00", subtitle: "+15% vs ontem", subtitleColor: Colors.green, iconBgColor: Color(0xFFE8EAF6), iconColor: Colors.indigo, cardColor: Color(0xFFF3E5F5))),
-                    SizedBox(width: 16),
-                    Expanded(child: _StatCard(icon: Icons.calendar_today, title: "AGENDA", value: "12", subtitle: "5 concluídos", subtitleColor: Color(0xFFAB47BC), iconBgColor: Color(0xFFF3E5F5), iconColor: Colors.purple, cardColor: Color(0xFFF3E5F5))),
+                children: [
+                    Expanded(child: _StatCard(icon: Icons.attach_money, title: "GANHOS", value: "R\$ 840,00", subtitle: "+15% vs ontem", subtitleColor: Colors.green, iconBgColor: AppColors.primaryPink.withOpacity(0.1), iconColor: AppColors.primaryPink, cardColor: Colors.white)),
+                    const SizedBox(width: 16),
+                    Expanded(child: _StatCard(icon: Icons.calendar_today, title: "AGENDA", value: "12", subtitle: "5 concluídos", subtitleColor: AppColors.primaryPurple, iconBgColor: AppColors.primaryPurple.withOpacity(0.1), iconColor: AppColors.primaryPurple, cardColor: Colors.white)),
                 ],
               ),
               const SizedBox(height: 32),
@@ -228,16 +253,17 @@ class _CalendarDate extends StatelessWidget {
         width: 60,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF3F51B5) : Colors.white, // Indigo selection
+          gradient: isActive ? AppColors.brandGradient : null,
+          color: isActive ? null : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isActive ? [
-             BoxShadow(color: const Color(0xFF3F51B5).withOpacity(0.4), blurRadius: 8, offset: const Offset(0,4))
+             BoxShadow(color: AppColors.primaryPink.withOpacity(0.3), blurRadius: 8, offset: const Offset(0,4))
           ] : [],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(weekDay, style: TextStyle(color: isActive ? Colors.white70 : Colors.purple, fontSize: 12)),
+            Text(weekDay, style: TextStyle(color: isActive ? Colors.white70 : AppColors.textSecondary, fontSize: 12)),
             const SizedBox(height: 4),
             Text(day, style: TextStyle(color: isActive ? Colors.white : Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
             if (isActive) ...[
@@ -281,7 +307,7 @@ class _StatCard extends StatelessWidget {
             children: [
               Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: iconColor, size: 20)),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4A148C))),
+              Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
             ],
           ),
           const SizedBox(height: 16),
@@ -327,11 +353,7 @@ class _AppointmentCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8EAF6),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(time, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3F51B5))),
+                child: Text(time, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryPurple)),
               ),
               const SizedBox(width: 16),
               Expanded(
