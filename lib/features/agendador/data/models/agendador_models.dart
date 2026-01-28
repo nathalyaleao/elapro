@@ -19,12 +19,22 @@ class Client {
   final String name;
   final String phone;
   final DateTime lastVisit;
+  final String? address;
+  final String? cpf;
+  final String? email;
+  final String? notes;
+  final DateTime? birthday;
 
   Client({
     required this.id,
     required this.name,
     required this.phone,
     required this.lastVisit,
+    this.address,
+    this.cpf,
+    this.email,
+    this.notes,
+    this.birthday,
   });
 
   // Regra de negócio: Cliente sumido se visita > 30 dias atrás

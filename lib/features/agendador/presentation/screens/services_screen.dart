@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../common/widgets/custom_button.dart';
 import 'package:elapro/features/agendador/data/models/agendador_models.dart';
+import 'package:elapro/core/injection/injection.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -11,24 +13,11 @@ class ServicesScreen extends StatefulWidget {
 }
 
 class _ServicesScreenState extends State<ServicesScreen> {
-  // Mock Data
-  final List<Service> _services = [
-    Service(id: '1', name: 'Manicure Completa', price: 45.0, durationMinutes: 60),
-    Service(id: '2', name: 'Pedicure', price: 40.0, durationMinutes: 45),
-    Service(id: '3', name: 'Design de Sobrancelhas', price: 35.0, durationMinutes: 30),
-  ];
-
   void _navigateToAddService() async {
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddServiceScreen()),
     );
-
-    if (result != null && result is Service) {
-      setState(() {
-        _services.add(result);
-      });
-    }
   }
 
   @override
@@ -41,30 +30,35 @@ class _ServicesScreenState extends State<ServicesScreen> {
             IconButton(onPressed: _navigateToAddService, icon: const Icon(Icons.add))
          ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _services.length,
-        itemBuilder: (context, index) {
-          final service = _services[index];
-          return Card(
-            elevation: 0,
-            color: Colors.white,
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
+      body: Observer(
+        builder: (_) {
+          final services = Injection.serviceStore.services;
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: services.length,
+            itemBuilder: (context, index) {
+              final service = services[index];
+              return Card(
+                elevation: 0,
+                color: Colors.white,
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryPink.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.spa, color: AppColors.primaryPink, size: 20),
+                  ),
+                  title: Text(service.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text("${service.durationMinutes} min", style: const TextStyle(color: Colors.grey)),
+                  trailing: Text("R\$ ${service.price.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
                 ),
-                child: const Icon(Icons.spa, color: AppColors.primary, size: 20),
-              ),
-              title: Text(service.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text("${service.durationMinutes} min", style: const TextStyle(color: Colors.grey)),
-              trailing: Text("R\$ ${service.price.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
-            ),
+              );
+            },
           );
         },
       ),
@@ -91,18 +85,13 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
   final _durationController = TextEditingController();
 
   void _saveService() {
-    if (_nameController.text.isEmpty || _priceController.text.isEmpty || _durationController.text.isEmpty) {
-      return; 
-    }
-
-    final newService = Service(
-      id: DateTime.now().toString(),
+    Injection.serviceStore.addService(
       name: _nameController.text,
       price: double.tryParse(_priceController.text) ?? 0.0,
       durationMinutes: int.tryParse(_durationController.text) ?? 30,
     );
 
-    Navigator.pop(context, newService);
+    Navigator.pop(context);
   }
 
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:elapro/core/theme/app_colors.dart';
 import 'package:elapro/features/agendador/presentation/screens/agendador_dashboard.dart';
-import 'package:elapro/features/orcamentista/presentation/screens/orcamentista_dashboard.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingFlowScreen extends StatefulWidget {
@@ -43,17 +43,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   }
 
   void _finishOnboarding() {
-    if (_selectedProfile == 'prestadora') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const AgendadorDashboard()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OrcamentistaDashboard()),
-      );
-    }
+    // Foco total no Agendador, Orçamentista desabilitado
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const AgendadorDashboard()),
+    );
   }
 
   @override
@@ -194,11 +188,16 @@ class _StepProfileSelection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _SelectionCard(
-            title: 'Orçamentos',
+            title: 'Orçamentos (Em breve)',
             subtitle: 'Trabalho com projetos personalizados, como bolos, designs, fotografia, etc.',
             icon: Icons.receipt_long_rounded,
-            isSelected: selectedProfile == 'vendedora',
-            onTap: () => onProfileSelected('vendedora'),
+            isSelected: false,
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Este módulo está em manutenção para melhorias!')),
+              );
+            },
+            isEnabled: false,
           ),
           const Spacer(),
           _BottomButton(
@@ -567,61 +566,67 @@ class _SelectionCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  final bool isEnabled;
+
   const _SelectionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    this.isEnabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected ? AppColors.primaryPink : Colors.transparent,
-            width: 2,
+      onTap: isEnabled ? onTap : null,
+      child: Opacity(
+        opacity: isEnabled ? 1.0 : 0.6,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? AppColors.primaryPink : Colors.transparent,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                gradient: isSelected ? AppColors.brandGradient : null,
-                color: isSelected ? null : AppColors.background,
-                borderRadius: BorderRadius.circular(16),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: isSelected ? AppColors.brandGradient : null,
+                  color: isSelected ? null : AppColors.background,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: isSelected ? Colors.white : AppColors.primaryPink, size: 26),
               ),
-              child: Icon(icon, color: isSelected ? Colors.white : AppColors.primaryPink, size: 26),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.3)),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(subtitle, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, height: 1.3)),
+                  ],
+                ),
               ),
-            ),
-            if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primaryPink),
-          ],
+              if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primaryPink),
+            ],
+          ),
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:elapro/core/theme/app_colors.dart';
 import 'package:elapro/features/finance/data/finance_repository.dart';
 import 'expense_form_screen.dart';
+import 'package:elapro/core/injection/injection.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 
 class FinanceDashboard extends StatelessWidget {
   const FinanceDashboard({super.key});
@@ -34,29 +36,33 @@ class FinanceDashboard extends StatelessWidget {
             child: Column(
               children: [
                 // 1. Balance Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.brandGradient,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [BoxShadow(color: AppColors.primaryPink.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
-                  ),
-                  child: Column(
-                    children: [
-                      const Text("Saldo Atual", style: TextStyle(color: Colors.white70, fontSize: 14)),
-                      const SizedBox(height: 8),
-                      Text("R\$ ${balance.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _BalanceRowItem(label: "Entradas", value: income, icon: Icons.arrow_upward, color: Colors.greenAccent),
-                          Container(width: 1, height: 40, color: Colors.white24),
-                          _BalanceRowItem(label: "Saídas", value: expense, icon: Icons.arrow_downward, color: Colors.redAccent),
-                        ],
-                      )
-                    ],
+                Observer(
+                  builder: (_) => Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.brandGradient,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: AppColors.primaryPink.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                    ),
+                    child: Column(
+                      children: [
+                        const Text("Faturamento Líquido (Real)", style: TextStyle(color: Colors.white70, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        Text("R\$ ${Injection.financeStore.totalNetRevenue.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text("Bruto: R\$ ${Injection.financeStore.totalGrossRevenue.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _BalanceRowItem(label: "Entradas", value: Injection.financeStore.totalNetRevenue, icon: Icons.arrow_upward, color: Colors.greenAccent),
+                            Container(width: 1, height: 40, color: Colors.white24),
+                            _BalanceRowItem(label: "Saldo Atual", value: Injection.financeStore.totalNetRevenue - expense, icon: Icons.account_balance_wallet, color: Colors.amberAccent),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),

@@ -6,6 +6,7 @@ import 'package:elapro/features/agendador/presentation/screens/settings/brand_se
 import 'package:elapro/features/agendador/presentation/screens/settings/availability_settings_screen.dart';
 import 'package:elapro/features/agendador/presentation/screens/settings/finance_calibration_screen.dart';
 import 'package:elapro/features/agendador/presentation/screens/settings/booking_link_settings_screen.dart';
+import 'package:elapro/features/agendador/presentation/screens/settings/finance_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -55,6 +56,14 @@ class SettingsScreen extends StatelessWidget {
             subtitle: "Metas e custos fixos",
             onTap: () {
                Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceCalibrationScreen()));
+            },
+          ),
+          _buildSettingsTile(
+            icon: Icons.credit_card_outlined,
+            title: "Taxas da Maquininha",
+            subtitle: "Débito, Crédito e Pix",
+            onTap: () {
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceSettingsScreen()));
             },
           ),
           const SizedBox(height: 24),

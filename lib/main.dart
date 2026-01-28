@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:elapro/core/theme/app_colors.dart';
-import 'package:elapro/features/onboarding/presentation/screens/splash_screen.dart';
+import 'package:elapro/features/agendador/presentation/screens/agendador_dashboard.dart';
 
 void main() {
   runApp(const ElaProApp());
@@ -35,7 +35,8 @@ class ElaProApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const SplashScreen(),
+      // ATALHO PARA TESTES: Pulando Splash e Onboarding
+      home: const AgendadorDashboard(),
     );
   }
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:elapro/core/theme/app_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:elapro/features/agendador/presentation/screens/services_screen.dart';
 import 'package:elapro/features/agendador/presentation/screens/clients_screen.dart';
 import 'package:elapro/features/agendador/presentation/screens/full_agenda_screen.dart';
@@ -8,6 +11,9 @@ import 'package:elapro/features/finance/data/finance_repository.dart';
 import 'package:elapro/features/finance/presentation/screens/finance_dashboard.dart';
 
 import 'package:elapro/features/agendador/presentation/screens/settings_screen.dart';
+import 'package:elapro/features/agendador/presentation/widgets/new_appointment_modal.dart';
+import 'package:elapro/core/injection/injection.dart';
+import 'package:elapro/features/agendador/data/models/agendador_models.dart';
 
 class AgendadorDashboard extends StatefulWidget {
   const AgendadorDashboard({super.key});
@@ -60,7 +66,14 @@ class _AgendadorDashboardState extends State<AgendadorDashboard> {
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const NewAppointmentModal(),
+            );
+          },
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: const Icon(Icons.add, color: Colors.white, size: 30),
@@ -96,25 +109,111 @@ class _AgendadorHomeState extends State<_AgendadorHome> {
     ]
   };
 
-  void _chargeClient(String clientName, String serviceName) {
-     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Cobrança para $clientName via WhatsApp... e +R\$50.00 no Caixa! 💰'), backgroundColor: Colors.green)
-    );
+  @override
+  void initState() {
+    super.initState();
+    _seedMockData();
+  }
 
-    FinanceRepository().addTransaction(Transaction(
-      id: DateTime.now().toString(),
-      title: "Pgto: $clientName",
-      value: 50.0, // Mock Value
-      type: TransactionType.income,
-      date: DateTime.now(),
-      category: 'Serviço',
-    ));
+  void _seedMockData() {
+    if (Injection.serviceStore.services.isEmpty) {
+      Injection.serviceStore.addService(name: "Manicure", price: 40, durationMinutes: 60);
+      Injection.serviceStore.addService(name: "Limpeza de Pele", price: 120, durationMinutes: 90);
+      Injection.serviceStore.addService(name: "Design de Sobrancelha", price: 45, durationMinutes: 30);
+    }
+    
+    if (Injection.clientStore.clients.isEmpty) {
+      Injection.clientStore.quickCreateClient("Ana Silva", "11988887777");
+      Injection.clientStore.quickCreateClient("Beatriz Oliveira", "11977776666");
+      Injection.clientStore.quickCreateClient("Carla Mendes", "11966665555");
+      Injection.clientStore.quickCreateTestClient(
+        "Julia Sumida", 
+        "11999999999", 
+        lastVisit: DateTime.now().subtract(const Duration(days: 45))
+      );
+    }
+
+    if (Injection.scheduleStore.appointments.isEmpty && Injection.clientStore.clients.isNotEmpty) {
+      final client = Injection.clientStore.clients.first;
+      final service = Injection.serviceStore.services.first;
+      
+      // Agendamento para hoje
+      Injection.scheduleStore.addAppointment(Appointment(
+        id: "seed-1",
+        client: client,
+        service: service,
+        dateTime: DateTime.now().add(const Duration(hours: 2)),
+        status: "CONFIRMADO",
+      ));
+
+      // Outro agendamento
+      if (Injection.serviceStore.services.length > 1) {
+        Injection.scheduleStore.addAppointment(Appointment(
+          id: "seed-2",
+          client: Injection.clientStore.clients[1],
+          service: Injection.serviceStore.services[1],
+          dateTime: DateTime.now().add(const Duration(hours: 5)),
+          status: "PENDENTE",
+        ));
+      }
+    }
+
+    if (Injection.financeStore.totalGrossRevenue == 0) {
+      Injection.financeStore.recordPayment(150.0, "Pix");
+      Injection.financeStore.recordPayment(45.0, "Débito");
+      Injection.financeStore.recordPayment(200.0, "Crédito");
+    }
+  }
+
+  void _chargeClient(String clientName, String serviceName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Registrar Pagamento"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Cliente: $clientName"),
+            Text("Serviço: $serviceName"),
+            const SizedBox(height: 16),
+            const Text("Escolha a forma de pagamento:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            _buildPayMethod(context, "Pix", 50.0), // Mock value 50
+            _buildPayMethod(context, "Débito", 50.0),
+            _buildPayMethod(context, "Crédito", 50.0),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPayMethod(BuildContext context, String method, double amount) {
+    return ListTile(
+      title: Text(method),
+      onTap: () {
+        Injection.financeStore.recordPayment(amount, method);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Pagamento de R\$ ${amount.toStringAsFixed(2)} ($method) registrado!'),
+            backgroundColor: Colors.green,
+          )
+        );
+      },
+      trailing: const Icon(Icons.chevron_right),
+    );
   }
   
-  void _confirmClient(String clientName) {
-      ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(content: Text('Confirmando com $clientName via WhatsApp...'), backgroundColor: Colors.green)
-    );
+  Future<void> _confirmClient(String clientName, String serviceName, String phone, String time) async {
+      final message = "Olá $clientName, confirmando seu horário de $serviceName para hoje às $time. Posso confirmar?";
+      final url = "https://wa.me/55$phone?text=${Uri.encodeFull(message)}";
+      
+      if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível abrir o WhatsApp'), backgroundColor: Colors.red)
+        );
+      }
   }
 
   @override
@@ -141,9 +240,10 @@ class _AgendadorHomeState extends State<_AgendadorHome> {
                           shape: BoxShape.circle,
                         ),
                         child: const CircleAvatar(
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=Juliana'),
-                          radius: 22,
-                        ),
+                    backgroundColor: AppColors.primaryPink,
+                    child: Icon(Icons.person, color: Colors.white, size: 24),
+                    radius: 24,
+                  ),
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -197,43 +297,53 @@ class _AgendadorHomeState extends State<_AgendadorHome> {
               const Text("Próximos Atendimentos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
 
-              if (dailyAppointments.isNotEmpty) ...[
-                ...dailyAppointments.map((appt) {
-                  return _AppointmentCard(
-                    time: appt['time'],
-                    name: appt['name'],
-                    service: appt['service'],
-                    status: appt['status'],
-                    statusColor: appt['color'],
-                    onConfirm: appt['status'] == 'PENDENTE' ? () => _confirmClient(appt['name']) : null,
-                    onCharge: appt['status'] == 'CONFIRMADO' ? () => _chargeClient(appt['name'], appt['service']) : null,
+              Observer(
+                builder: (_) {
+                  final appointments = Injection.scheduleStore.appointments;
+                  if (appointments.isEmpty) {
+                    return Container(
+                       padding: const EdgeInsets.symmetric(vertical: 48),
+                       width: double.infinity,
+                       decoration: BoxDecoration(
+                         color: Colors.white,
+                         borderRadius: BorderRadius.circular(32),
+                         border: Border.all(color: AppColors.background)
+                       ),
+                       child: Column(
+                         children: [
+                           Icon(Icons.event_seat_outlined, size: 48, color: Colors.grey.shade300),
+                           const SizedBox(height: 16),
+                           Text("Nenhum agendamento para hoje", style: GoogleFonts.inter(color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+                         ],
+                       ),
+                     );
+                  }
+                  
+                  return Column(
+                    children: appointments.map((appt) {
+                      return _AppointmentCard(
+                        time: "${appt.dateTime.hour}:${appt.dateTime.minute.toString().padLeft(2, '0')}",
+                        name: appt.client.name,
+                        service: appt.service.name,
+                        status: appt.status,
+                        statusColor: appt.status == 'CONFIRMADO' ? Colors.green : Colors.orange,
+                        onConfirm: appt.status == 'PENDENTE' ? () => _confirmClient(appt.client.name, appt.service.name, appt.client.phone, "${appt.dateTime.hour}:00") : null,
+                        onCharge: appt.status == 'CONFIRMADO' ? () => _chargeClient(appt.client.name, appt.service.name) : null,
+                      );
+                    }).toList(),
                   );
-                }).toList()
-              ] else ...[
-                 Container(
-                   padding: const EdgeInsets.symmetric(vertical: 40),
-                   width: double.infinity,
-                   decoration: BoxDecoration(
-                     color: Colors.grey.shade50,
-                     borderRadius: BorderRadius.circular(16),
-                     border: Border.all(color: Colors.grey.shade200)
-                   ),
-                   child: Column(
-                     children: [
-                       Icon(Icons.event_busy, size: 48, color: Colors.grey.shade300),
-                       const SizedBox(height: 12),
-                       Text("Agenda livre para este dia!", style: TextStyle(color: Colors.grey.shade500)),
-                     ],
-                   ),
-                 )
-              ],
-
-              const SizedBox(height: 60),
+                },
+              ),
+              const SizedBox(height: 100),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800));
   }
 }
 
@@ -250,26 +360,24 @@ class _CalendarDate extends StatelessWidget {
     return GestureDetector( // Tornando clicável
       onTap: onTap,
       child: Container(
-        width: 60,
-        margin: const EdgeInsets.only(right: 12),
+        width: 70,
+        margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           gradient: isActive ? AppColors.brandGradient : null,
           color: isActive ? null : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: isActive ? [
-             BoxShadow(color: AppColors.primaryPink.withOpacity(0.3), blurRadius: 8, offset: const Offset(0,4))
-          ] : [],
+             BoxShadow(color: AppColors.primaryPink.withOpacity(0.3), blurRadius: 10, offset: const Offset(0,6))
+          ] : [
+             BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(weekDay, style: TextStyle(color: isActive ? Colors.white70 : AppColors.textSecondary, fontSize: 12)),
+            Text(weekDay, style: GoogleFonts.inter(color: isActive ? Colors.white70 : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text(day, style: TextStyle(color: isActive ? Colors.white : Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
-            if (isActive) ...[
-              const SizedBox(height: 4),
-              const CircleAvatar(backgroundColor: Colors.white, radius: 2),
-            ]
+            Text(day, style: GoogleFonts.inter(color: isActive ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.w900)),
           ],
         ),
       ),
@@ -388,8 +496,8 @@ class _AppointmentCard extends StatelessWidget {
                 if (onConfirm != null)
                   TextButton.icon(
                     onPressed: onConfirm, 
-                    icon: const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                    label: const Text("Confirmar", style: TextStyle(color: Colors.green)),
+                    icon: const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.green),
+                    label: const Text("Confirmar no Zap", style: TextStyle(color: Colors.green)),
                   ),
                 if (onCharge != null)
                   TextButton.icon(
